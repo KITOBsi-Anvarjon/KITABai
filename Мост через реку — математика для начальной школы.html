@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Мост через реку — игра по математике</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap&subset=cyrillic" rel="stylesheet">
+<style>
+:root{
+  --sky:#d6f0f7; --card:#ffffff; --ink:#12303a; --muted:#4b6670;
+  --river:#2e8fb0; --plank:#c98b4b; --plank-dark:#9a6530; --sun:#ffc93c;
+  --ok:#1e8a4c; --bad:#c2410c; --line:#b7d9e4;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito","Segoe UI",system-ui,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --sky:#0f2a35; --card:#173a48; --ink:#eaf6fa; --muted:#a6c4cf;
+    --river:#3aa5c9; --line:#2a5667; --ok:#5fd694; --bad:#ff9a66;
+  }
+}
+:root[data-theme="dark"]{
+  --sky:#0f2a35; --card:#173a48; --ink:#eaf6fa; --muted:#a6c4cf;
+  --river:#3aa5c9; --line:#2a5667; --ok:#5fd694; --bad:#ff9a66;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:600;min-height:100vh}
+main{max-width:620px;margin:0 auto;padding:20px 16px 40px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(2rem,7vw,2.8rem);margin:8px 0 4px;line-height:1.05}
+p{line-height:1.5;margin:0 0 12px}
+.muted{color:var(--muted)}
+.card{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:18px}
+.levels{display:grid;gap:12px;margin-top:18px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:4px solid var(--sun);outline-offset:3px}
+.level{display:flex;align-items:center;gap:14px;text-align:left;background:var(--card);border:2px solid var(--line);border-radius:18px;padding:14px 16px;font-weight:800;font-size:1.1rem}
+.level small{display:block;font-weight:600;color:var(--muted);font-size:.9rem}
+.level .sym{font-family:var(--display);font-size:1.9rem;width:48px;height:48px;border-radius:14px;background:var(--sun);color:#12303a;display:grid;place-items:center;flex:none}
+.level:hover{border-color:var(--river)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:800}
+.link{background:none;border:0;padding:6px 2px;text-decoration:underline;color:var(--muted);font-weight:800}
+.river{position:relative;margin:14px 0 18px;padding:34px 6px 0;background:var(--river);border-radius:18px;overflow:hidden}
+.bridge{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;height:34px;position:relative}
+.slot{border-radius:6px 6px 3px 3px;position:relative;background:transparent;border:2px dashed rgba(255,255,255,.45)}
+.slot.ok{background:var(--plank);border:0;box-shadow:inset 0 -5px 0 var(--plank-dark);animation:drop .3s ease-out}
+.slot.miss{border:2px dashed rgba(255,255,255,.2)}
+.frog{position:absolute;top:-34px;left:50%;transform:translateX(-50%);font-size:1.7rem;line-height:1}
+.frog.hop{animation:hop .4s ease-out}
+.wave{height:14px;margin-top:6px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.25) 0 14px,transparent 14px 28px)}
+@keyframes drop{from{transform:translateY(-14px);opacity:0}to{transform:none;opacity:1}}
+@keyframes hop{0%{transform:translate(-50%,0)}50%{transform:translate(-50%,-14px)}100%{transform:translate(-50%,0)}}
+.q{font-family:var(--display);font-weight:800;font-size:clamp(2.6rem,13vw,4rem);text-align:center;margin:6px 0 16px;letter-spacing:.02em}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ans{font-family:var(--display);font-weight:800;font-size:2rem;padding:16px 8px;border-radius:18px;border:3px solid var(--line);background:var(--card);min-height:72px}
+.ans:hover:not(:disabled){border-color:var(--river)}
+.ans.right{background:var(--ok);border-color:var(--ok);color:#fff}
+.ans.wrong{background:var(--bad);border-color:var(--bad);color:#fff;animation:shake .3s}
+.ans:disabled{cursor:default}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.fb{min-height:3.2em;margin-top:14px;font-size:1.1rem;font-weight:800;text-align:center}
+.next{display:block;margin:4px auto 0;background:var(--sun);color:#12303a;border:0;border-radius:16px;padding:14px 28px;font-family:var(--display);font-weight:800;font-size:1.3rem}
+.stars{font-size:2.6rem;text-align:center;letter-spacing:.1em;margin:6px 0}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+.hidden{display:none}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+
+<section id="start">
+  <h1>Мост через реку</h1>
+  <p class="muted">Реши 10 примеров, и лягушка перейдёт на другой берег. Каждый верный ответ строит одну доску.</p>
+  <div class="levels" id="levels"></div>
+</section>
+
+<section id="game" class="hidden">
+  <div class="top">
+    <button class="link" id="back">← Выбрать уровень</button>
+    <span id="count" aria-live="polite"></span>
+  </div>
+  <div class="river" aria-hidden="true">
+    <div class="bridge" id="bridge"></div>
+    <div class="wave"></div>
+  </div>
+  <div class="card">
+    <div class="q" id="question" aria-live="polite"></div>
+    <div class="answers" id="answers"></div>
+    <div class="fb" id="fb" aria-live="polite"></div>
+    <button class="next hidden" id="next">Дальше</button>
+  </div>
+</section>
+
+<section id="end" class="hidden">
+  <div class="card">
+    <h1 id="endTitle"></h1>
+    <div class="stars" id="stars" aria-hidden="true"></div>
+    <p id="endText" style="text-align:center"></p>
+    <div class="row">
+      <button class="next" id="again">Играть ещё раз</button>
+      <button class="link" id="menu">Другой уровень</button>
+    </div>
+  </div>
+</section>
+
+</main>
+<script>
+(function(){
+  var LEVELS=[
+    {id:"add",sym:"+",name:"Сложение до 20",sub:"Примеры вроде 7 + 8"},
+    {id:"sub",sym:"−",name:"Вычитание до 20",sub:"Примеры вроде 15 − 6"},
+    {id:"mul",sym:"×",name:"Таблица умножения",sub:"От 2 × 2 до 9 × 9"},
+    {id:"mix",sym:"?",name:"Всё вместе",sub:"Числа до 100, три действия"}
+  ];
+  var TOTAL=10, level=null, i=0, score=0, cur=null, locked=false, missed=[];
+  var $=function(id){return document.getElementById(id)};
+  var rnd=function(a,b){return a+Math.floor(Math.random()*(b-a+1))};
+
+  function make(kind){
+    var a,b,t,text,ans;
+    if(kind==="mix"){kind=["add","sub","mul"][rnd(0,2)];var big=true}
+    if(kind==="add"){
+      if(big){a=rnd(11,70);b=rnd(5,100-a)}else{a=rnd(1,19);b=rnd(1,20-a)}
+      ans=a+b;text=a+" + "+b;
+    }else if(kind==="sub"){
+      if(big){a=rnd(30,100);b=rnd(5,a-5)}else{a=rnd(3,20);b=rnd(1,a-1)}
+      ans=a-b;text=a+" − "+b;
+    }else{
+      a=rnd(2,9);b=rnd(2,big?10:9);ans=a*b;text=a+" × "+b;
+    }
+    var set={};set[ans]=1;
+    var offs=[-10,-2,-1,1,2,10,a,b];
+    while(Object.keys(set).length<4){
+      var c=ans+offs[rnd(0,offs.length-1)]*(Math.random()<.5?1:-1);
+      if(Math.random()<.3)c=ans+rnd(-6,6);
+      if(c>0&&c!==ans)set[c]=1;
+    }
+    var opts=Object.keys(set).map(Number).sort(function(){return Math.random()-.5});
+    return {text:text,ans:ans,opts:opts};
+  }
+
+  function show(id){["start","game","end"].forEach(function(s){$(s).classList.toggle("hidden",s!==id)})}
+
+  function drawBridge(hop){
+    var h="";
+    for(var k=0;k<TOTAL;k++){
+      var cls=k<i?(missed.indexOf(k)>-1?"miss":"ok"):"";
+      h+='<div class="slot '+cls+'">'+(k===i&&i<TOTAL?'<span class="frog'+(hop?" hop":"")+'">🐸</span>':"")+"</div>";
+    }
+    $("bridge").innerHTML=h;
+  }
+
+  function ask(){
+    locked=false;cur=make(level.id);
+    $("count").textContent="Пример "+(i+1)+" из "+TOTAL;
+    $("question").textContent=cur.text+" = ?";
+    $("fb").textContent="";
+    $("next").classList.add("hidden");
+    drawBridge(false);
+    $("answers").innerHTML=cur.opts.map(function(o,n){
+      return '<button class="ans" data-v="'+o+'" aria-label="Ответ '+o+'">'+o+"</button>";
+    }).join("");
+  }
+
+  function pick(btn){
+    if(locked)return;locked=true;
+    var v=Number(btn.dataset.v),ok=v===cur.ans;
+    [].forEach.call($("answers").children,function(b){
+      b.disabled=true;
+      if(Number(b.dataset.v)===cur.ans)b.classList.add("right");
+    });
+    if(ok){
+      score++;
+      $("fb").textContent=["Верно! Доска на месте.","Отлично! Лягушка прыгает дальше.","Точно! Так держать."][rnd(0,2)];
+    }else{
+      btn.classList.add("wrong");missed.push(i);
+      $("fb").textContent="Не совсем. Правильный ответ: "+cur.ans+". Доски не хватает, но можно идти дальше.";
+    }
+    i++;drawBridge(true);
+    var nx=$("next");nx.textContent=i<TOTAL?"Дальше":"Узнать результат";
+    nx.classList.remove("hidden");nx.focus();
+  }
+
+  function finish(){
+    var stars=score>=9?3:score>=6?2:score>=3?1:0;
+    $("endTitle").textContent=score>=9?"Мост построен!":score>=6?"Почти получилось!":"Попробуем ещё?";
+    $("stars").textContent="★".repeat(stars)+"☆".repeat(3-stars);
+    $("endText").textContent="Верных ответов: "+score+" из "+TOTAL+". "+(score>=9?"Лягушка перешла реку без единой лужи.":score>=6?"Лягушка перебралась, но пару раз прыгала через пустоту.":"Тренируйся, и мост получится ровнее.");
+    show("end");
+  }
+
+  function start(l){level=l;i=0;score=0;missed=[];show("game");ask()}
+
+  $("levels").innerHTML=LEVELS.map(function(l,n){
+    return '<button class="level" data-n="'+n+'"><span class="sym">'+l.sym+'</span><span>'+l.name+"<small>"+l.sub+"</small></span></button>";
+  }).join("");
+  $("levels").addEventListener("click",function(e){
+    var b=e.target.closest(".level");if(b)start(LEVELS[b.dataset.n]);
+  });
+  $("answers").addEventListener("click",function(e){
+    var b=e.target.closest(".ans");if(b)pick(b);
+  });
+  $("next").addEventListener("click",function(){i<TOTAL?ask():finish()});
+  $("again").addEventListener("click",function(){start(level)});
+  $("menu").addEventListener("click",function(){show("start")});
+  $("back").addEventListener("click",function(){show("start")});
+  document.addEventListener("keydown",function(e){
+    if(e.key>="1"&&e.key<="4"&&!$("game").classList.contains("hidden")){
+      var b=$("answers").children[Number(e.key)-1];if(b&&!b.disabled)pick(b);
+    }
+  });
+})();
+</script>
+</body>
+</html>
